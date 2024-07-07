@@ -5,6 +5,7 @@
 #include "driver/gpio.h"
 #include "esp_timer.h"
 #include "ds18b20.c"
+#include "freertos/queue.h"
 
 #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_NUM_5) | (1ULL<<GPIO_NUM_18) | (1ULL<<GPIO_NUM_19) | (1ULL<<GPIO_NUM_21))
 #define GPIO_INPUT_IO_0      0
@@ -31,6 +32,7 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 
 void app_main(void)
 {
+    sensor_data_queue = xQueueCreate(1, sizeof(Temperatures));
     xTaskCreate(&ds18b20_main, "ds18b20_task", 4096, NULL, 5, NULL);
 
     gpio_config_t io_conf;
@@ -56,28 +58,40 @@ void app_main(void)
     uint8_t counter = 0;
     set_inverted_gpio_values(counter);
 
-    while(1) {
-        uint32_t io_num;
-        if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
-            if(gpio_get_level(io_num) == 0)
-            {
-                int64_t press_time = esp_timer_get_time();
-                while(gpio_get_level(io_num) == 0)
-                {
-                    vTaskDelay(10 / portTICK_PERIOD_MS);
-                }
-                int64_t release_time = esp_timer_get_time();
-                int64_t press_duration = release_time - press_time;
-
-                if (press_duration < LONG_PRESS_DURATION_MS * 1000)
-                {
-                    counter++;
-                } else {
-                    counter--;
-                }
-
-                set_inverted_gpio_values(counter & 0x0F);
-            }
+    Temperatures temps;
+    while(1)
+    {
+        //pdMS_TO_TICKS(5000)
+        if (xQueueReceive(sensor_data_queue, &temps, portMAX_DELAY))
+        {
+            // Process the received temperature value
+            printf("Received temperature from main, internal: %.3f\n", temps.indoor_temp);
+            printf("Received temperature from main, external: %.3f\n", temps.outdoor_temp);
         }
+
+
+//        uint32_t io_num;
+//        if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
+//        {
+//            if(gpio_get_level(io_num) == 0)
+//            {
+//                int64_t press_time = esp_timer_get_time();
+//                while(gpio_get_level(io_num) == 0)
+//                {
+//                    vTaskDelay(10 / portTICK_PERIOD_MS);
+//                }
+//                int64_t release_time = esp_timer_get_time();
+//                int64_t press_duration = release_time - press_time;
+//
+//                if (press_duration < LONG_PRESS_DURATION_MS * 1000)
+//                {
+//                    counter++;
+//                } else {
+//                    counter--;
+//                }
+//
+//                set_inverted_gpio_values(counter & 0x0F);
+//            }
+//        }
     }
 }

@@ -30,11 +30,19 @@
 #include "owb.h"
 #include "owb_rmt.h"
 #include "ds18b20.h"
+#include "freertos/queue.h"
 
 #define GPIO_DS18B20_0       (CONFIG_ONE_WIRE_GPIO)
 #define MAX_DEVICES          (8)
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
 #define SAMPLE_PERIOD        (30000)   // milliseconds
+
+QueueHandle_t sensor_data_queue;
+
+typedef struct {
+    float indoor_temp;
+    float outdoor_temp;
+} Temperatures;
 
 _Noreturn void ds18b20_main()
 {
@@ -189,6 +197,11 @@ _Noreturn void ds18b20_main()
             {
                 errors[i] = ds18b20_read_temp(devices[i], &readings[i]);
             }
+
+            Temperatures temps;
+            temps.indoor_temp = readings[0];
+            temps.outdoor_temp = readings[1];
+            xQueueSend(sensor_data_queue, &temps, portMAX_DELAY);
 
             // Print results in a separate loop, after all have been read
             printf("\nTemperature readings (degrees C): sample %d\n", ++sample_count);
