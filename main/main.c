@@ -87,6 +87,7 @@ void app_main(void)
             } else if(power > 15) {
                 power = 15;
             }
+            printf("New power is %i\n", power);
             set_inverted_gpio_values(power & 0x0F);
         }
 
