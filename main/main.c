@@ -14,7 +14,7 @@
 
 #define LONG_PRESS_DURATION_MS 500
 
-double target_temp = 23.0;
+double target_temp = 27.5;
 double proportional_k = 1.0/15;
 
 QueueHandle_t gpio_evt_queue = NULL;
@@ -67,6 +67,8 @@ void app_main(void)
         //pdMS_TO_TICKS(5000)
         if (xQueueReceive(sensor_data_queue, &temps, portMAX_DELAY))
         {
+            temps.indoor_temp = 28.0;
+
             // Process the received temperature value
             printf("Received temperature from main, internal: %.3f\n", temps.indoor_temp);
             printf("Received temperature from main, external: %.3f\n", temps.outdoor_temp);
@@ -78,8 +80,9 @@ void app_main(void)
             set_inverted_gpio_values(0 & 0x0F);
         } else
         {
-            printf("Outdoor temp is higher than indoor, cant do anything, disable\n");
-            double difference = target_temp - (double)temps.indoor_temp;
+            double difference = (double)temps.indoor_temp - target_temp;
+            printf("Diff: %.3f\n", difference);
+            printf("P_K: %.3f\n", proportional_k);
             int power = (int)(proportional_k * difference);
 
             if(power < 0) {
