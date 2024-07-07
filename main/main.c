@@ -15,7 +15,7 @@
 #define LONG_PRESS_DURATION_MS 500
 
 double target_temp = 27.5;
-double proportional_k = 1.0/15;
+double proportional_k = 15;
 
 QueueHandle_t gpio_evt_queue = NULL;
 
@@ -64,12 +64,8 @@ void app_main(void)
     Temperatures temps;
     while(1)
     {
-        //pdMS_TO_TICKS(5000)
         if (xQueueReceive(sensor_data_queue, &temps, portMAX_DELAY))
         {
-            temps.indoor_temp = 28.0;
-
-            // Process the received temperature value
             printf("Received temperature from main, internal: %.3f\n", temps.indoor_temp);
             printf("Received temperature from main, external: %.3f\n", temps.outdoor_temp);
         }
@@ -78,11 +74,11 @@ void app_main(void)
         {
             printf("Outdoor temp is higher than indoor, cant do anything, disable\n");
             set_inverted_gpio_values(0 & 0x0F);
-        } else
+        }
+        else
         {
             double difference = (double)temps.indoor_temp - target_temp;
             printf("Diff: %.3f\n", difference);
-            printf("P_K: %.3f\n", proportional_k);
             int power = (int)(proportional_k * difference);
 
             if(power < 0) {
@@ -93,31 +89,5 @@ void app_main(void)
             printf("New power is %i\n", power);
             set_inverted_gpio_values(power & 0x0F);
         }
-
-
-
-//        uint32_t io_num;
-//        if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
-//        {
-//            if(gpio_get_level(io_num) == 0)
-//            {
-//                int64_t press_time = esp_timer_get_time();
-//                while(gpio_get_level(io_num) == 0)
-//                {
-//                    vTaskDelay(10 / portTICK_PERIOD_MS);
-//                }
-//                int64_t release_time = esp_timer_get_time();
-//                int64_t press_duration = release_time - press_time;
-//
-//                if (press_duration < LONG_PRESS_DURATION_MS * 1000)
-//                {
-//                    counter++;
-//                } else {
-//                    counter--;
-//                }
-//
-//                set_inverted_gpio_values(counter & 0x0F);
-//            }
-//        }
     }
 }
