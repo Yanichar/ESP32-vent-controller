@@ -16,6 +16,8 @@
 
 double target_temp = 27.5;
 double proportional_k = 15;
+int minimal_power = 8;
+int maximum_power = 15;
 
 QueueHandle_t gpio_evt_queue = NULL;
 
@@ -81,10 +83,13 @@ void app_main(void)
             printf("Diff: %.3f\n", difference);
             int power = (int)(proportional_k * difference);
 
-            if(power < 0) {
-                power = 0;
-            } else if(power > 15) {
-                power = 15;
+            if(power < minimal_power)
+            {
+                power = minimal_power;
+            }
+            else if(power > maximum_power)
+            {
+                power = maximum_power;
             }
             printf("New power is %i\n", power);
             set_inverted_gpio_values(power & 0x0F);
