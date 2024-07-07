@@ -34,7 +34,7 @@
 #define GPIO_DS18B20_0       (CONFIG_ONE_WIRE_GPIO)
 #define MAX_DEVICES          (8)
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
-#define SAMPLE_PERIOD        (1000)   // milliseconds
+#define SAMPLE_PERIOD        (30000)   // milliseconds
 
 _Noreturn void ds18b20_main()
 {
