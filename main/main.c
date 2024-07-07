@@ -4,6 +4,7 @@
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 #include "esp_timer.h"
+#include "ds18b20.c"
 
 #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_NUM_5) | (1ULL<<GPIO_NUM_18) | (1ULL<<GPIO_NUM_19) | (1ULL<<GPIO_NUM_21))
 #define GPIO_INPUT_IO_0      0
@@ -30,6 +31,8 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 
 void app_main(void)
 {
+    xTaskCreate(&ds18b20_main, "ds18b20_task", 4096, NULL, 5, NULL);
+
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_OUTPUT;
