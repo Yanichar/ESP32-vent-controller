@@ -15,6 +15,7 @@
 #define LONG_PRESS_DURATION_MS 500
 
 double target_temp = 23.0;
+double proportional_k = 1.0/15;
 
 QueueHandle_t gpio_evt_queue = NULL;
 
@@ -78,7 +79,15 @@ void app_main(void)
         } else
         {
             printf("Outdoor temp is higher than indoor, cant do anything, disable\n");
-            double differnce =
+            double difference = target_temp - (double)temps.indoor_temp;
+            int power = (int)(proportional_k * difference);
+
+            if(power < 0) {
+                power = 0;
+            } else if(power > 15) {
+                power = 15;
+            }
+            set_inverted_gpio_values(power & 0x0F);
         }
 
 
