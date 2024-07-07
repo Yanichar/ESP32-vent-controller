@@ -14,6 +14,8 @@
 
 #define LONG_PRESS_DURATION_MS 500
 
+double target_temp = 23.0;
+
 QueueHandle_t gpio_evt_queue = NULL;
 
 void set_inverted_gpio_values(uint8_t value)
@@ -68,6 +70,17 @@ void app_main(void)
             printf("Received temperature from main, internal: %.3f\n", temps.indoor_temp);
             printf("Received temperature from main, external: %.3f\n", temps.outdoor_temp);
         }
+
+        if (temps.outdoor_temp > temps.indoor_temp)
+        {
+            printf("Outdoor temp is higher than indoor, cant do anything, disable\n");
+            set_inverted_gpio_values(0 & 0x0F);
+        } else
+        {
+            printf("Outdoor temp is higher than indoor, cant do anything, disable\n");
+            double differnce =
+        }
+
 
 
 //        uint32_t io_num;
